@@ -1,0 +1,18 @@
+# Use official Streamlit base image
+FROM python:3.9
+
+# Set working directory
+WORKDIR /app
+
+# Copy required files
+COPY requirements_streamlit.txt requirements.txt
+COPY dashboard_app.py dashboard.py
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Expose Streamlit default port
+EXPOSE 8501
+
+# Run Streamlit app
+CMD ["streamlit", "run", "dashboard.py", "--server.port=8501", "--server.address=0.0.0.0"]
