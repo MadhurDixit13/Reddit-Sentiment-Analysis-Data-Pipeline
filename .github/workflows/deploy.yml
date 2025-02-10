@@ -54,15 +54,10 @@ jobs:
       - name: SSH into the Server and Deploy
         run: |
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            # ✅ Check if the directory exists before proceeding
-            if [ ! -d "/home/ubuntu/Reddit-Sentiment-Analysis-Data-Pipeline" ]; then
-              echo "❌ ERROR: Project directory does not exist!"
-              exit 1
-            fi
+            # ✅ Change to the correct directory
+            cd /home/ec2-user || exit 1
 
-            cd /home/ubuntu/Reddit-Sentiment-Analysis-Data-Pipeline
-
-            # ✅ Check if docker-compose.yaml exists
+            # ✅ Ensure `docker-compose.yaml` exists before running commands
             if [ ! -f "docker-compose.yaml" ]; then
               echo "❌ ERROR: docker-compose.yaml not found!"
               exit 1
@@ -75,12 +70,12 @@ jobs:
 
       - name: Verify Running Containers
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /home/ubuntu/Reddit-Sentiment-Analysis-Data-Pipeline && docker ps --format 'table {{.Names}}\t{{.Status}}'"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /home/ec2-user && docker ps --format 'table {{.Names}}\t{{.Status}}'"
 
       - name: Set Airflow Secrets
         run: |
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            cd /home/ubuntu/Reddit-Sentiment-Analysis-Data-Pipeline
+            cd /home/ec2-user
             docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set AWS_ACCESS_KEY "${{ secrets.AWS_ACCESS_KEY }}"
             docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set AWS_SECRET_KEY "${{ secrets.AWS_SECRET_KEY }}"
             docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set S3_BUCKET_NAME "${{ secrets.S3_BUCKET_NAME }}"
