@@ -47,32 +47,44 @@ jobs:
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa  # ✅ Ensure proper line breaks
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
       - name: SSH into the Server and Deploy
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            # ✅ Check if the directory exists before proceeding
+            if [ ! -d "/home/ubuntu/Reddit-Sentiment-Analysis-Data-Pipeline" ]; then
+              echo "❌ ERROR: Project directory does not exist!"
+              exit 1
+            fi
+
             cd /home/ubuntu/Reddit-Sentiment-Analysis-Data-Pipeline
+
+            # ✅ Check if docker-compose.yaml exists
+            if [ ! -f "docker-compose.yaml" ]; then
+              echo "❌ ERROR: docker-compose.yaml not found!"
+              exit 1
+            fi
+
             docker-compose -f docker-compose.yaml down
             docker-compose -f docker-compose.yaml up -d
             docker system prune -f
           EOF
+
       - name: Verify Running Containers
         run: |
-          ssh -i ${{ secrets.SSH_PRIVATE_KEY }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /home/ubuntu/Reddit-Sentiment-Analysis-Data-Pipeline && docker ps --format 'table {{.Names}}\t{{.Status}}'"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /home/ubuntu/Reddit-Sentiment-Analysis-Data-Pipeline && docker ps --format 'table {{.Names}}\t{{.Status}}'"
+
       - name: Set Airflow Secrets
         run: |
-          ssh -i ${{ secrets.SSH_PRIVATE_KEY }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd /home/ubuntu/Reddit-Sentiment-Analysis-Data-Pipeline
-            sudo apt-get update
-            sudo apt-get install -y docker-compose
-            docker ps --format "table {{.Names}}\t{{.Status}}"
-            docker compose exec airflow-webserver airflow variables set AWS_ACCESS_KEY "${{ secrets.AWS_ACCESS_KEY }}"
-            docker compose exec airflow-webserver airflow variables set AWS_SECRET_KEY "${{ secrets.AWS_SECRET_KEY }}"
-            docker compose exec airflow-webserver airflow variables set S3_BUCKET_NAME "${{ secrets.S3_BUCKET_NAME }}"
-            docker compose exec airflow-webserver airflow variables set REDDIT_CLIENT_ID "${{ secrets.REDDIT_CLIENT_ID }}"
-            docker compose exec airflow-webserver airflow variables set REDDIT_CLIENT_SECRET "${{ secrets.REDDIT_CLIENT_SECRET }}"
-            docker compose exec airflow-webserver airflow variables set REDDIT_USER_AGENT "${{ secrets.REDDIT_USER_AGENT }}"
+            docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set AWS_ACCESS_KEY "${{ secrets.AWS_ACCESS_KEY }}"
+            docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set AWS_SECRET_KEY "${{ secrets.AWS_SECRET_KEY }}"
+            docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set S3_BUCKET_NAME "${{ secrets.S3_BUCKET_NAME }}"
+            docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set REDDIT_CLIENT_ID "${{ secrets.REDDIT_CLIENT_ID }}"
+            docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set REDDIT_CLIENT_SECRET "${{ secrets.REDDIT_CLIENT_SECRET }}"
+            docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set REDDIT_USER_AGENT "${{ secrets.REDDIT_USER_AGENT }}"
           EOF
