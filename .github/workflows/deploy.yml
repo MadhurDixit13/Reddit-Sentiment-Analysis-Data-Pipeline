@@ -44,6 +44,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
