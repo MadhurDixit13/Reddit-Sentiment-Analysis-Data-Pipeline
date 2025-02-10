@@ -53,19 +53,26 @@ jobs:
           script: |
             sudo apt-get update
             sudo apt-get install -y docker-compose
+            cd /home/ubuntu/Reddit-Sentiment-Analysis-Data-Pipeline
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/airflow:latest
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/streamlit-dashboard:latest
             docker-compose down
             docker-compose up -d
             docker system prune -f
+      - name: Verify Running Containers
+        run: |
+          ssh -i ${{ secrets.SSH_PRIVATE_KEY }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /home/ubuntu/Reddit-Sentiment-Analysis-Data-Pipeline && docker ps --format 'table {{.Names}}\t{{.Status}}'"
       - name: Set Airflow Secrets
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-          docker ps --format "table {{.Names}}\t{{.Status}}"
-          docker compose exec airflow-webserver airflow variables set AWS_ACCESS_KEY "${{ secrets.AWS_ACCESS_KEY }}"
-          docker compose exec airflow-webserver airflow variables set AWS_SECRET_KEY "${{ secrets.AWS_SECRET_KEY }}"
-          docker compose exec airflow-webserver airflow variables set S3_BUCKET_NAME "${{ secrets.S3_BUCKET_NAME }}"
-          docker compose exec airflow-webserver airflow variables set REDDIT_CLIENT_ID "${{ secrets.REDDIT_CLIENT_ID }}"
-          docker compose exec airflow-webserver airflow variables set REDDIT_CLIENT_SECRET "${{ secrets.REDDIT_CLIENT_SECRET }}"
-          docker compose exec airflow-webserver airflow variables set REDDIT_USER_AGENT "${{ secrets.REDDIT_USER_AGENT }}"
+          ssh -i ${{ secrets.SSH_PRIVATE_KEY }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            cd /home/ubuntu/Reddit-Sentiment-Analysis-Data-Pipeline
+            sudo apt-get update
+            sudo apt-get install -y docker-compose
+            docker ps --format "table {{.Names}}\t{{.Status}}"
+            docker compose exec airflow-webserver airflow variables set AWS_ACCESS_KEY "${{ secrets.AWS_ACCESS_KEY }}"
+            docker compose exec airflow-webserver airflow variables set AWS_SECRET_KEY "${{ secrets.AWS_SECRET_KEY }}"
+            docker compose exec airflow-webserver airflow variables set S3_BUCKET_NAME "${{ secrets.S3_BUCKET_NAME }}"
+            docker compose exec airflow-webserver airflow variables set REDDIT_CLIENT_ID "${{ secrets.REDDIT_CLIENT_ID }}"
+            docker compose exec airflow-webserver airflow variables set REDDIT_CLIENT_SECRET "${{ secrets.REDDIT_CLIENT_SECRET }}"
+            docker compose exec airflow-webserver airflow variables set REDDIT_USER_AGENT "${{ secrets.REDDIT_USER_AGENT }}"
+          EOF
