@@ -24,7 +24,7 @@ services:
       - key: REDIS_URL
         fromService: redis-db
     plan: free
-    dockerCommand: "airflow webserver"
+    dockerCommand: ["airflow", "webserver"]
 
   - name: airflow-scheduler
     type: background
@@ -35,7 +35,7 @@ services:
       - key: AIRFLOW__CORE__SQL_ALCHEMY_CONN
         fromService: postgres-db
     plan: free
-    dockerCommand: "airflow scheduler"
+    dockerCommand: ["airflow", "scheduler"]
 
   - name: airflow-worker
     type: background
@@ -46,7 +46,7 @@ services:
       - key: AIRFLOW__CORE__SQL_ALCHEMY_CONN
         fromService: postgres-db
     plan: free
-    dockerCommand: "airflow celery worker"
+    dockerCommand: ["airflow", "celery", "worker"]
 
   - name: streamlit-dashboard
     type: web
@@ -61,8 +61,7 @@ services:
       - key: S3_BUCKET_NAME
         sync: false
     plan: free
-    dockerCommand: "streamlit run dashboard_app.py --server.port=8080 --server.address=0.0.0.0"
-
+    dockerCommand: ["streamlit", "run", "dashboard_app.py", "--server.port=8080", "--server.address=0.0.0.0"]
 databases:
   - name: postgres-db
     databaseName: postgres

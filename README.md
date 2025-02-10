@@ -124,5 +124,3 @@ This project is licensed under the **MIT License**. Feel free to modify and use 
 
 ---
 
-🚀 **Now, your README is professional, detailed, and CI/CD-ready!** Let me know if you want to add more details! 🚀
-
