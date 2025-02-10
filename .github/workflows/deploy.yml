@@ -49,10 +49,18 @@ jobs:
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
-          password: ${{ secrets.SERVER_PASSWORD }}
+          password: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/airflow:latest
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/streamlit-dashboard:latest
             docker-compose down
             docker-compose up -d
             docker system prune -f
+      - name: Set Airflow Secrets
+        run: |
+          docker exec -it airflow-webserver airflow variables set AWS_ACCESS_KEY "${{ secrets.AWS_ACCESS_KEY }}"
+          docker exec -it airflow-webserver airflow variables set AWS_SECRET_KEY "${{ secrets.AWS_SECRET_KEY }}"
+          docker exec -it airflow-webserver airflow variables set S3_BUCKET_NAME "${{ secrets.S3_BUCKET_NAME }}"
+          docker exec -it airflow-webserver airflow variables set REDDIT_CLIENT_ID "${{ secrets.REDDIT_CLIENT_ID }}"
+          docker exec -it airflow-webserver airflow variables set REDDIT_CLIENT_SECRET "${{ secrets.REDDIT_CLIENT_SECRET }}"
+          docker exec -it airflow-webserver airflow variables set REDDIT_USER_AGENT "${{ secrets.REDDIT_USER_AGENT }}"
