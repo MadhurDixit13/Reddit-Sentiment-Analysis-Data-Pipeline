@@ -54,22 +54,35 @@ jobs:
           sudo mv cli_v1.1.0 /usr/local/bin/render
           render --version  # ✅ Verify installation
 
+      - name: Debug Render API Response (Print All Services)
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: |
+          echo "🔹 Fetching all services from Render API..."
+          RESPONSE=$(curl -s -H "Authorization: Bearer $RENDER_API_KEY" \
+                          -H "Accept: application/json" \
+                          https://api.render.com/v1/services)
+
+          echo "⬇ Full Render API Response ⬇"
+          echo "$RESPONSE" | jq  # Pretty print JSON
+
       - name: Retrieve Render Service ID
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
         run: |
           SERVICE_NAME="Reddit-Sentiment-Analysis-Data-Pipeline"
+
+          echo "🔹 Searching for service: $SERVICE_NAME"
           
-          # ✅ Fetch services list from Render API
           RESPONSE=$(curl -s -H "Authorization: Bearer $RENDER_API_KEY" \
                           -H "Accept: application/json" \
                           https://api.render.com/v1/services)
 
-          # ✅ Debug: Print available services
+          # ✅ Print available services
           echo "Available Services:"
           echo "$RESPONSE" | jq '.[] | {id: .id, name: .name}'
 
-          # ✅ Extract correct service ID
+          # ✅ Extract correct Service ID
           SERVICE_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.name=="'"$SERVICE_NAME"'") | .id')
 
           # ✅ Check if Service ID is found
