@@ -50,33 +50,26 @@ jobs:
       - name: Install Render CLI
         run: |
           curl -L https://github.com/render-oss/cli/releases/download/v1.1.0/cli_1.1.0_linux_amd64.zip -o render.zip
-          unzip -o render.zip  # ✅ Overwrite existing files without prompt
+          unzip -o render.zip
           sudo mv cli_v1.1.0 /usr/local/bin/render
           render --version  # ✅ Verify installation
 
-      - name: Deploy Airflow Webserver to Render
+      - name: Retrieve Render Service ID Dynamically
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          CI: true
-        run: render deploys create ${{ secrets.RENDER_SERVICE_ID_WEBSERVER }} --output json --confirm
+        run: |
+          SERVICE_NAME="Reddit-Sentiment-Analysis-Data-Pipeline"
+          SERVICE_ID=$(curl -s -H "Authorization: Bearer $RENDER_API_KEY" \
+                      -H "Accept: application/json" \
+                      https://api.render.com/v1/services | jq -r '.[] | select(.name=="'"$SERVICE_NAME"'") | .id')
+          echo "RENDER_SERVICE_ID=$SERVICE_ID" >> $GITHUB_ENV  # Store for later steps
+          echo "Found Service ID: $SERVICE_ID"
 
-      - name: Deploy Airflow Scheduler to Render
+      - name: Deploy Reddit-Sentiment-Analysis-Data-Pipeline to Render
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           CI: true
-        run: render deploys create ${{ secrets.RENDER_SERVICE_ID_SCHEDULER }} --output json --confirm
-
-      - name: Deploy Airflow Worker to Render
-        env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          CI: true
-        run: render deploys create ${{ secrets.RENDER_SERVICE_ID_WORKER }} --output json --confirm
-
-      - name: Deploy Streamlit Dashboard to Render
-        env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          CI: true
-        run: render deploys create ${{ secrets.RENDER_SERVICE_ID_DASHBOARD }} --output json --confirm
+        run: render deploys create $RENDER_SERVICE_ID --output json --confirm
 
   # deploy-ec2:
   #   needs: build
@@ -96,44 +89,11 @@ jobs:
   #       run: |
   #         rsync -avz --exclude '.git' --exclude 'node_modules' -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/
       
-  #     - name: Write GitHub Secrets to .env File on EC2
-  #       run: |
-  #         ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-  #           echo "AIRFLOW_UID=50000" > /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
-  #           echo "AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}" >> /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
-  #           echo "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}" >> /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
-  #           echo "S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}" >> /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
-  #           echo "REDDIT_CLIENT_ID=${{ secrets.REDDIT_CLIENT_ID }}" >> /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
-  #           echo "REDDIT_CLIENT_SECRET=${{ secrets.REDDIT_CLIENT_SECRET }}" >> /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
-  #           echo "REDDIT_USER_AGENT=${{ secrets.REDDIT_USER_AGENT }}" >> /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
-  #           chmod 600 /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
-  #         EOF
-
-  #     - name: SSH into the Server and Deploy
-  #       run: |
-  #         ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-  #           cd /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/ || exit 1
-  #           if [ ! -f "docker-compose.yaml" ]; then
-  #             echo " ERROR: docker-compose.yaml not found!"
-  #             exit 1
-  #           fi
-  #           docker-compose -f docker-compose.yaml down
-  #           docker-compose -f docker-compose.yaml up -d
-  #           docker system prune -f
-  #         EOF
-
-  #     - name: Verify Running Containers
-  #       run: |
-  #         ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/ && docker ps --format 'table {{.Names}}\t{{.Status}}'"
-
-  #     - name: Set Airflow Secrets
+  #     - name: Deploy on EC2 Using Docker Compose
   #       run: |
   #         ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
   #           cd /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/
-  #           docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set AWS_ACCESS_KEY "${{ secrets.AWS_ACCESS_KEY }}"
-  #           docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set AWS_SECRET_KEY "${{ secrets.AWS_SECRET_KEY }}"
-  #           docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set S3_BUCKET_NAME "${{ secrets.S3_BUCKET_NAME }}"
-  #           docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set REDDIT_CLIENT_ID "${{ secrets.REDDIT_CLIENT_ID }}"
-  #           docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set REDDIT_CLIENT_SECRET "${{ secrets.REDDIT_CLIENT_SECRET }}"
-  #           docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set REDDIT_USER_AGENT "${{ secrets.REDDIT_USER_AGENT }}"
+  #           docker-compose down
+  #           docker-compose up -d
+  #           docker system prune -f
   #         EOF
