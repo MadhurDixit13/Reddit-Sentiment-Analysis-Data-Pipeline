@@ -66,40 +66,45 @@ jobs:
           echo "⬇ Full Render API Response ⬇"
           echo "$RESPONSE" | jq  # Pretty print JSON
 
-      - name: Retrieve Render Service ID
-        env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-        run: |
-          SERVICE_NAME="Reddit-Sentiment-Analysis-Data-Pipeline"
+      # - name: Retrieve Render Service ID
+      #   env:
+      #     RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      #   run: |
+      #     SERVICE_NAME="Reddit-Sentiment-Analysis-Data-Pipeline"
 
-          echo "🔹 Searching for service: $SERVICE_NAME"
+      #     echo "🔹 Searching for service: $SERVICE_NAME"
           
-          RESPONSE=$(curl -s -H "Authorization: Bearer $RENDER_API_KEY" \
-                          -H "Accept: application/json" \
-                          https://api.render.com/v1/services)
+      #     RESPONSE=$(curl -s -H "Authorization: Bearer $RENDER_API_KEY" \
+      #                     -H "Accept: application/json" \
+      #                     https://api.render.com/v1/services)
 
-          # ✅ Print available services
-          echo "Available Services:"
-          echo "$RESPONSE" | jq '.[] | {id: .id, name: .name}'
+      #     # ✅ Print available services
+      #     echo "Available Services:"
+      #     echo "$RESPONSE" | jq '.[] | {id: .id, name: .name}'
 
-          # ✅ Extract correct Service ID
-          SERVICE_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.name=="'"$SERVICE_NAME"'") | .id')
+      #     # ✅ Extract correct Service ID
+      #     SERVICE_ID=$(echo "$RESPONSE" | jq -r '.[] | select(.name=="'"$SERVICE_NAME"'") | .id')
 
-          # ✅ Check if Service ID is found
-          if [[ -z "$SERVICE_ID" || "$SERVICE_ID" == "null" ]]; then
-            echo "❌ ERROR: No matching Render Service found for '$SERVICE_NAME'"
-            exit 1
-          fi
+      #     # ✅ Check if Service ID is found
+      #     if [[ -z "$SERVICE_ID" || "$SERVICE_ID" == "null" ]]; then
+      #       echo "❌ ERROR: No matching Render Service found for '$SERVICE_NAME'"
+      #       exit 1
+      #     fi
 
-          echo "RENDER_SERVICE_ID=$SERVICE_ID" >> $GITHUB_ENV
-          echo "✅ Found Service ID: $SERVICE_ID"
+      #     echo "RENDER_SERVICE_ID=$SERVICE_ID" >> $GITHUB_ENV
+      #     echo "✅ Found Service ID: $SERVICE_ID"
 
-      - name: Deploy to Render
-        env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          CI: true
+      - name: Set up SSH Key for Render
         run: |
-          render services update $RENDER_SERVICE_ID --confirm
+          mkdir -p ~/.ssh
+          echo "${{ secrets.RENDER_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ssh.render.com >> ~/.ssh/known_hosts
+
+      - name: Deploy to Render via SSH
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no render@ssh.render.com \
+          "cd ~/services/Reddit-Sentiment-Analysis-Data-Pipeline && git pull && docker-compose up -d"
 
   # deploy-ec2:
   #   needs: build
