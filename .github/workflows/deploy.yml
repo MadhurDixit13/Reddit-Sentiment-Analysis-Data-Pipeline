@@ -61,12 +61,12 @@ jobs:
       - name: SSH into the Server and Deploy
         run: |
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            # ✅ Change to the correct directory
+            #  Change to the correct directory
             cd /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/ || exit 1
 
-            # ✅ Ensure `docker-compose.yaml` exists before running commands
+            #  Ensure `docker-compose.yaml` exists before running commands
             if [ ! -f "docker-compose.yaml" ]; then
-              echo "❌ ERROR: docker-compose.yaml not found!"
+              echo " ERROR: docker-compose.yaml not found!"
               exit 1
             fi
 
