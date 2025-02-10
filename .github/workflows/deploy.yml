@@ -44,21 +44,21 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
       - name: SSH into the Server and Deploy
-        uses: appleboy/ssh-action@v0.1.6
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            sudo apt-get update
-            sudo apt-get install -y docker-compose
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd /home/ubuntu/Reddit-Sentiment-Analysis-Data-Pipeline
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/airflow:latest
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/streamlit-dashboard:latest
-            docker-compose down
-            docker-compose up -d
+            docker-compose -f docker-compose.yaml down
+            docker-compose -f docker-compose.yaml up -d
             docker system prune -f
+          EOF
       - name: Verify Running Containers
         run: |
           ssh -i ${{ secrets.SSH_PRIVATE_KEY }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /home/ubuntu/Reddit-Sentiment-Analysis-Data-Pipeline && docker ps --format 'table {{.Names}}\t{{.Status}}'"
