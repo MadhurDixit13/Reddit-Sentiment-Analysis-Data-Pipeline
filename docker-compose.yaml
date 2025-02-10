@@ -125,7 +125,7 @@ services:
   streamlit-dashboard:
     image: streamlit_dashboard:latest
     build:
-      context: "C:/MadhurProject/Reddit-Sentiment-Analysis-Data-Pipeline"
+      context: .
       dockerfile: StreamlitDockerfile
     ports:
       - "8501:8501"
