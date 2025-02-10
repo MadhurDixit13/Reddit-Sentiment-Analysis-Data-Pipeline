@@ -47,28 +47,31 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Install Render CLI
-        run: curl -fsSL https://cli.render.com/install.sh | sh
+      - name: Install Render CLI Manually
+        run: |
+          mkdir -p ~/.render/bin
+          curl -L https://github.com/renderinc/render-cli/releases/latest/download/render-linux-amd64 -o ~/.render/bin/render
+          chmod +x ~/.render/bin/render
 
       - name: Deploy Airflow Webserver to Render
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-        run: render deploy --service airflow-webserver
+        run: ~/.render/bin/render deploy --service airflow-webserver
 
       - name: Deploy Airflow Scheduler to Render
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-        run: render deploy --service airflow-scheduler
+        run: ~/.render/bin/render deploy --service airflow-scheduler
 
       - name: Deploy Airflow Worker to Render
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-        run: render deploy --service airflow-worker
+        run: ~/.render/bin/render deploy --service airflow-worker
 
       - name: Deploy Streamlit Dashboard to Render
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-        run: render deploy --service streamlit-dashboard
+        run: ~/.render/bin/render deploy --service streamlit-dashboard
 
   # deploy-ec2:
   #   needs: build
