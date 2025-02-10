@@ -94,17 +94,19 @@ jobs:
       #     echo "RENDER_SERVICE_ID=$SERVICE_ID" >> $GITHUB_ENV
       #     echo "✅ Found Service ID: $SERVICE_ID"
 
-      - name: Set up SSH Key for Render
+      - name: Configure SSH for Render
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.RENDER_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ssh.render.com >> ~/.ssh/known_hosts
+          ssh-keyscan -H ssh.oregon.render.com >> ~/.ssh/known_hosts  # ✅ Use correct SSH host
 
-      - name: Deploy to Render via SSH
+      - name: Deploy to Render
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: srv-cul474btq21c73bntqb0  # ✅ Correct Service ID
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no render@ssh.render.com \
-          "cd ~/services/Reddit-Sentiment-Analysis-Data-Pipeline && git pull && docker-compose up -d"
+          render deploys create $RENDER_SERVICE_ID --output json --confirm
 
   # deploy-ec2:
   #   needs: build
