@@ -51,6 +51,8 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            sudo apt-get update
+            sudo apt-get install -y docker-compose
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/airflow:latest
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/streamlit-dashboard:latest
             docker-compose down
@@ -58,6 +60,8 @@ jobs:
             docker system prune -f
       - name: Set Airflow Secrets
         run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
           docker ps --format "table {{.Names}}\t{{.Status}}"
           docker-compose exec airflow-webserver airflow variables set AWS_ACCESS_KEY "${{ secrets.AWS_ACCESS_KEY }}"
           docker-compose exec airflow-webserver airflow variables set AWS_SECRET_KEY "${{ secrets.AWS_SECRET_KEY }}"
