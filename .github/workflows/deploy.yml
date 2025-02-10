@@ -50,7 +50,7 @@ jobs:
       - name: Install Render CLI
         run: |
           curl -L https://github.com/render-oss/cli/releases/download/v1.1.0/cli_1.1.0_linux_amd64.zip -o render.zip
-          unzip render.zip
+          unzip -o render.zip  # ✅ Overwrite existing files without prompt
           sudo mv cli_v1.1.0 /usr/local/bin/render
           render --version  # ✅ Verify installation
 
