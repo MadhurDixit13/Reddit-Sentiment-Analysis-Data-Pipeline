@@ -47,31 +47,36 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Install Render CLI Manually
+      - name: Install Render CLI
         run: |
-          mkdir -p ~/.render/bin
-          curl -L https://github.com/renderinc/render-cli/releases/latest/download/render-linux-amd64 -o ~/.render/bin/render
-          chmod +x ~/.render/bin/render
+          curl -L https://github.com/render-oss/cli/releases/download/v1.1.0/cli_1.1.0_linux_amd64.zip -o render.zip
+          unzip render.zip
+          sudo mv cli_v1.1.0 /usr/local/bin/render
+          render --version  # ✅ Verify installation
 
       - name: Deploy Airflow Webserver to Render
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-        run: ~/.render/bin/render deploy --service airflow-webserver
+          CI: true
+        run: render deploys create ${{ secrets.RENDER_SERVICE_ID_WEBSERVER }} --output json --confirm
 
       - name: Deploy Airflow Scheduler to Render
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-        run: ~/.render/bin/render deploy --service airflow-scheduler
+          CI: true
+        run: render deploys create ${{ secrets.RENDER_SERVICE_ID_SCHEDULER }} --output json --confirm
 
       - name: Deploy Airflow Worker to Render
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-        run: ~/.render/bin/render deploy --service airflow-worker
+          CI: true
+        run: render deploys create ${{ secrets.RENDER_SERVICE_ID_WORKER }} --output json --confirm
 
       - name: Deploy Streamlit Dashboard to Render
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-        run: ~/.render/bin/render deploy --service streamlit-dashboard
+          CI: true
+        run: render deploys create ${{ secrets.RENDER_SERVICE_ID_DASHBOARD }} --output json --confirm
 
   # deploy-ec2:
   #   needs: build
