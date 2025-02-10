@@ -57,6 +57,19 @@ jobs:
       - name: Sync Project Files to EC2
         run: |
           rsync -avz --exclude '.git' --exclude 'node_modules' -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/
+      
+      - name: Write GitHub Secrets to .env File on EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            echo "AIRFLOW_UID=50000" > /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
+            echo "AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}" >> /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
+            echo "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}" >> /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
+            echo "S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}" >> /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
+            echo "REDDIT_CLIENT_ID=${{ secrets.REDDIT_CLIENT_ID }}" >> /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
+            echo "REDDIT_CLIENT_SECRET=${{ secrets.REDDIT_CLIENT_SECRET }}" >> /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
+            echo "REDDIT_USER_AGENT=${{ secrets.REDDIT_USER_AGENT }}" >> /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
+            chmod 600 /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
+          EOF
 
       - name: SSH into the Server and Deploy
         run: |
