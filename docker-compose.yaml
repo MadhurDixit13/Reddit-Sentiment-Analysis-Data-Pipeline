@@ -75,6 +75,11 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"  # Limit to 50% of CPU
+          # memory: "1g"  # Limit memory to 1GB
     restart: always
     depends_on:
       <<: *airflow-common-depends-on
@@ -92,6 +97,11 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"  # Limit to 50% of CPU
+          # memory: "1g"  # Limit memory to 1GB
     restart: always
     depends_on:
       <<: *airflow-common-depends-on
@@ -141,6 +151,11 @@ services:
       AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
       AWS_SECRET_KEY: ${AWS_SECRET_KEY}
       S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"  # Limit to 50% of CPU
+          memory: "1g"  # Limit memory to 1GB
     depends_on:
       - airflow-webserver
 
