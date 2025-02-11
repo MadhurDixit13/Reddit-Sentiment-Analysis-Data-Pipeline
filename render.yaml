@@ -4,6 +4,7 @@ services:
     runtime: docker
     repo: https://github.com/MadhurDixit13/Reddit-Sentiment-Analysis-Data-Pipeline.git
     branch: main
+    startCommand: "airflow webserver" 
     envVars:
       - key: AWS_ACCESS_KEY
         sync: false
@@ -31,6 +32,7 @@ services:
     runtime: docker
     repo: https://github.com/MadhurDixit13/Reddit-Sentiment-Analysis-Data-Pipeline.git
     branch: main
+    startCommand: "airflow scheduler" 
     envVars:
       - key: AIRFLOW__CORE__SQL_ALCHEMY_CONN
         fromService: postgres-db
@@ -42,6 +44,7 @@ services:
     runtime: docker
     repo: https://github.com/MadhurDixit13/Reddit-Sentiment-Analysis-Data-Pipeline.git
     branch: main
+    startCommand: "airflow celery worker"
     envVars:
       - key: AIRFLOW__CORE__SQL_ALCHEMY_CONN
         fromService: postgres-db
@@ -53,6 +56,7 @@ services:
     runtime: docker
     repo: https://github.com/MadhurDixit13/Reddit-Sentiment-Analysis-Data-Pipeline.git
     branch: main
+    startCommand: "streamlit run dashboard_app.py --server.port=8080 --server.address=0.0.0.0"
     envVars:
       - key: AWS_ACCESS_KEY
         sync: false

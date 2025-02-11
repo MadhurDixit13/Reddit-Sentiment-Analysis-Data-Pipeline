@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
-
+# port = int(os.environ.get("PORT", 8080))
 # Get AWS Credentials
 AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
 AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
@@ -89,3 +89,5 @@ else:
     st.warning("No data available. Please check if the S3 bucket contains the latest dataset.")
 
 st.sidebar.write("Developed by **Madhur Dixit**")
+# if __name__ == "__main__":
+#     st.run(port=port, address="0.0.0.0")
