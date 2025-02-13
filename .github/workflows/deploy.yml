@@ -179,11 +179,11 @@ jobs:
 
       - name: Verify Running Containers
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/ && docker ps --format 'table {{.Names}}\t{{.Status}}'"
+          ssh -t -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/ && docker ps --format 'table {{.Names}}\t{{.Status}}'"
 
       - name: Set Airflow Secrets
         run: |
-          ssh -i ~/.ssh/id_rsa -o ServerAliveInterval=60 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}
+          ssh -t -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}
             cd /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/
             docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set AWS_ACCESS_KEY "${{ secrets.AWS_ACCESS_KEY }}"
             docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set AWS_SECRET_KEY "${{ secrets.AWS_SECRET_KEY }}"
