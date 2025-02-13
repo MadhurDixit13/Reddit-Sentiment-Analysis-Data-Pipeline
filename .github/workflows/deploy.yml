@@ -93,10 +93,45 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+      
+      - name: Install Docker & Docker Compose (if not installed) and Fix Permissions
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            # Install Docker if not installed
+            if ! command -v docker &> /dev/null
+            then
+              echo "Installing Docker..."
+              sudo amazon-linux-extras enable docker
+              sudo yum install -y docker
+              sudo systemctl start docker
+              sudo systemctl enable docker
+            else
+              echo "Docker is already installed."
+            fi
+            
+            # Install Docker Compose if not installed
+            if ! command -v docker-compose &> /dev/null
+            then
+              echo "Installing Docker Compose..."
+              sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+            else
+              echo "Docker Compose is already installed."
+            fi
+            
+            # Ensure the user has Docker permissions
+            sudo usermod -aG docker ec2-user
+            newgrp docker
+          EOF
 
       - name: Sync Project Files to EC2
         run: |
           rsync -avz --exclude '.git' --exclude 'node_modules' -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/
+        
+      - name: Fix Docker Permissions
+        run: |
+          sudo usermod -aG docker ec2-user
+          newgrp docker
       
       - name: Write GitHub Secrets to .env File on EC2
         run: |
@@ -108,6 +143,8 @@ jobs:
             echo "REDDIT_CLIENT_ID=${{ secrets.REDDIT_CLIENT_ID }}" >> /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
             echo "REDDIT_CLIENT_SECRET=${{ secrets.REDDIT_CLIENT_SECRET }}" >> /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
             echo "REDDIT_USER_AGENT=${{ secrets.REDDIT_USER_AGENT }}" >> /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
+            echo "REDDIT_USERNAME=${{secrets.REDDIT_USERNAME}}" >> /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
+            echo "REDDIT_USERNAME=${{secrets.REDDIT_PASSWORD}}" >> /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
             chmod 600 /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/.env
           EOF
 
@@ -138,4 +175,6 @@ jobs:
             docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set REDDIT_CLIENT_ID "${{ secrets.REDDIT_CLIENT_ID }}"
             docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set REDDIT_CLIENT_SECRET "${{ secrets.REDDIT_CLIENT_SECRET }}"
             docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set REDDIT_USER_AGENT "${{ secrets.REDDIT_USER_AGENT }}"
+            docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set REDDIT_USERNAME "${{ secrets.REDDIT_USERNAME }}"
+            docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set REDDIT_PASSWORD "${{ secrets.REDDIT_PASSWORD }}"
           EOF
