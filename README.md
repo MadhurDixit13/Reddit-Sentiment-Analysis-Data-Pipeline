@@ -97,10 +97,8 @@ docker-compose up -d
 ---
 
 ## **📊 Dashboard Preview**
-<p align="center">
-  <img src="https://user-images.githubusercontent.com/example/dashboard-preview.png" width="700" alt="Streamlit Dashboard Preview">
-</p>
-
+ - Streamlit Dashboard - [EC2 Deployed Dashboard](http://3.145.33.23:8501)
+ - Airflow UI - [EC2 Deployed Airflow UI](http://3.145.33.23:8080)
 ---
 
 ## **🔹 Key Features**
