@@ -123,6 +123,13 @@ jobs:
             sudo usermod -aG docker ec2-user
             newgrp docker
           EOF
+      
+      - name: Fix Permissions on EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            sudo chown -R $(whoami):$(whoami) /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/
+            sudo chmod -R 775 /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/
+          EOF
 
       - name: Sync Project Files to EC2
         run: |
