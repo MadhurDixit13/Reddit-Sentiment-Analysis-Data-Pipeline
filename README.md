@@ -111,10 +111,9 @@ docker-compose up -d
 ---
 
 ## **📞 Contact & Contributions**
-👨‍💻 **Author**: [Your Name](https://github.com/MadhurDixit13)  
+👨‍💻 **Author**: [Madhur Dixit](https://github.com/MadhurDixit13)  
 🤝 **Contributions**: PRs are welcome! Open an issue to discuss improvements.  
 🌟 **Star this repo** if you found it useful!  
-
 ---
 
 ## **🔹 License**
