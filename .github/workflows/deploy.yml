@@ -135,11 +135,13 @@ jobs:
         run: |
           rsync -avz --exclude '.git' --exclude 'node_modules' -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/
         
-      - name: Fix Docker Permissions
+      - name: Fix Docker Permissions on EC2
         run: |
-          sudo usermod -aG docker ec2-user
-          newgrp docker
-      
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            sudo usermod -aG docker ec2-user
+            sudo systemctl restart docker
+          EOF
+
       - name: Write GitHub Secrets to .env File on EC2
         run: |
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
