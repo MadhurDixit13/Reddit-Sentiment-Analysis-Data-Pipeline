@@ -166,10 +166,10 @@ jobs:
 
       - name: SSH into the Server and Deploy
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+          ssh -t -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@${{ secrets.SERVER_IP }} << 'EOF'
             cd /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/ || exit 1
             if [ ! -f "docker-compose.yaml" ]; then
-              echo " ERROR: docker-compose.yaml not found!"
+              echo "ERROR: docker-compose.yaml not found!"
               exit 1
             fi
             docker-compose -f docker-compose.yaml down
@@ -177,14 +177,19 @@ jobs:
             docker system prune -f
           EOF
 
+
       - name: Verify Running Containers
         run: |
           ssh -t -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/ && docker ps --format 'table {{.Names}}\t{{.Status}}'"
 
       - name: Set Airflow Secrets
         run: |
-          ssh -t -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}
-            cd /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/
+          ssh -t -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@${{ secrets.SERVER_IP }} << 'EOF'
+            cd /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline/ || exit 1
+            if [ ! -f ".env" ]; then
+              echo "ERROR: .env not found!"
+              exit 1
+            fi
             docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set AWS_ACCESS_KEY "${{ secrets.AWS_ACCESS_KEY }}"
             docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set AWS_SECRET_KEY "${{ secrets.AWS_SECRET_KEY }}"
             docker-compose -f docker-compose.yaml exec airflow-webserver airflow variables set S3_BUCKET_NAME "${{ secrets.S3_BUCKET_NAME }}"
