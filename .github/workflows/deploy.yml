@@ -141,6 +141,13 @@ jobs:
             sudo usermod -aG docker ec2-user
             sudo systemctl restart docker
           EOF
+        
+      - name: Fix Permissions on EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            sudo chown -R ec2-user:ec2-user /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline
+            sudo chmod -R 755 /home/ec2-user/Reddit-Sentiment-Analysis-Data-Pipeline
+          EOF
 
       - name: Write GitHub Secrets to .env File on EC2
         run: |
