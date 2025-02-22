@@ -99,6 +99,26 @@ docker-compose up -d
 ## **📊 Dashboard Preview**
  - Streamlit Dashboard - [EC2 Deployed Dashboard](http://3.145.33.23:8501)
  - Airflow UI - [EC2 Deployed Airflow UI](http://3.145.33.23:8080)
+I had to stop the EC2 instance because I needed to use a t2.medium instance, which wasn’t covered under the free tier, and I couldn’t afford to keep it running.
+
+---
+
+## ** Screenshots **
+
+Here are some screenshots of the application to show the working as I had to stop the EC2 instance.
+- Airflow UI(DAGs running daily)
+![DAGS](daily.png)
+- Calender
+![Calender](calender.png)
+- Streamlit Dashboard
+![Streamlit](streamlist.png)
+- Streamlit Chart 1
+![Chart 1](dashboard.png)
+- Streamlit Chart 2
+![Chart 2](dashboard1.png)
+- Streamlit Chart 3
+![Chart 3](dashboard2.png)
+
 ---
 
 ## **🔹 Key Features**
